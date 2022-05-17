@@ -12,7 +12,7 @@ Une précommande "PreCommande[k]" commence par lisser la valeur de notre command
 on calcul ensuite l'erreur entre la précommande et la valeur réelle en sortie de notre moteur.
 Le Reg_RC[k] et Reg_1s[k] sont ensuite appliqué à l'erreur et pour Reg_RC et à la sortie de 
 Reg_RC pour Reg_1s. 
-Comme chacun des calculs prendent en compte la valeur à t-1, nous mettons ensuite à jour les 
+Comme chacun des calculs prennent en compte la valeur à t-1, nous mettons ensuite à jour les 
 les différentes variables.
 La dernière étape de ce régutaleur est le filtrage des données.
 Nous application donc un filtre à la valeur en sortie de Reg_1safin que les valeurs de pwm 
