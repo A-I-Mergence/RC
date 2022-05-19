@@ -69,6 +69,6 @@ public:
     double _c0;
     double _r1;
     double _r0;
-    double _k;
+    double _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
 };
 #endif

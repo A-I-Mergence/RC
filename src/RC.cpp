@@ -52,7 +52,6 @@ void RC::CalculRC(){
     double _d1=3*pow(_omega,2);
     double _d2=3*_omega;
     double _d3=1;
-    double _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
     _c1=_d3/_A2;
     _c0=(_d2-_A1*_c1)/_A2;
     _r1=(_d1-_A1*_c0-_A0*_c1)/_b0;
