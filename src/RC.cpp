@@ -15,6 +15,7 @@ RC::RC(volatile double* Input, volatile double* Output, volatile double* Setpoin
     e[k-1] = 0;
     e[k] = 0;
     Reg_RC[k-1] = 0;
+    Reg_1s[k-1] = 0;
     
     RCtimer.start();
     RCtimer.reset();
