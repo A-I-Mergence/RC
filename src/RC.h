@@ -53,9 +53,9 @@ public:
     double _a1;
     double _a2;
     double _b0;
-    // double _A2 = _a1;
-    // double _A1 = _a0;
-    // double _A0 = 0;
+    double _A2 = _a1;
+    double _A1 = _a0;
+    double _A0 = 0;
   
     //variables parmètre pour le régulateur et la précommande
     double _T=0.16;

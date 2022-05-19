@@ -45,9 +45,9 @@ void RC::ParaMotor(double a0, double a1, double a2, double b0){
 }
 
 void RC::CalculRC(){  
-    double _A2 = _a1;
-    double _A1 = _a0;
-    double _A0 = 0;
+    _A2 = _a1;
+    _A1 = _a0;
+    _A0 = 0;
     double _d0=pow(_omega,3);
     double _d1=3*pow(_omega,2);
     double _d2=3*_omega;
