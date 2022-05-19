@@ -53,22 +53,22 @@ public:
     double _a1;
     double _a2;
     double _b0;
-    double _A2 = _a1;
-    double _A1 = _a0;
-    double _A0 = 0;
+    // double _A2 = _a1;
+    // double _A1 = _a0;
+    // double _A0 = 0;
   
     //variables parmètre pour le régulateur et la précommande
     double _T=0.16;
     double _w=3;
     double _omega=(_w+2*sqrt(_w-1))/_T;
-    double _d0;
-    double _d1;
-    double _d2;
-    double _d3;
+    // double _d0;
+    // double _d1;
+    // double _d2;
+    // double _d3;
     double _c1;
     double _c0;
     double _r1;
     double _r0;
-    double _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
+    double _k;
 };
 #endif

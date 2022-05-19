@@ -45,13 +45,14 @@ void RC::ParaMotor(double a0, double a1, double a2, double b0){
 }
 
 void RC::CalculRC(){  
-    _A2 = _a1;
-    _A1 = _a0;
-    _A0=0;
-    _d0=pow(_omega,3);
-    _d1=3*pow(_omega,2);
-    _d2=3*_omega;
-    _d3=1;
+    double _A2 = _a1;
+    double _A1 = _a0;
+    double _A0 = 0;
+    double _d0=pow(_omega,3);
+    double _d1=3*pow(_omega,2);
+    double _d2=3*_omega;
+    double _d3=1;
+    double _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
     _c1=_d3/_A2;
     _c0=(_d2-_A1*_c1)/_A2;
     _r1=(_d1-_A1*_c0-_A0*_c1)/_b0;
@@ -61,6 +62,7 @@ void RC::CalculRC(){
 bool RC::Regule(float dt)
 {
    int k=1;
+   
    SampleTime = dt;
     //    Declaration des variables   
     double input = *myInput;
