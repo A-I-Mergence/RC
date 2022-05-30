@@ -37,13 +37,21 @@ void RC::SetMode(int Mode)
     inAuto = newAuto;
 }
 
-void RC::ParaMotor(double a0, double a1, double a2, double b0){
+void RC::SetParaMotor(double a0, double a1, double a2, double b0){
     _a0 = a0;
     _a1 = a1;
     _a2 = a2;
     _b0 = b0;
     CalculRC();
 }
+
+void RC::SetParaRC(){
+    _T=0.16;
+    _w=3;
+    _omega=(_w+2*sqrt(_w-1))/_T;
+    CalculRC();
+}
+
 
 void RC::CalculRC(){  
     _A2 = _a1;
@@ -57,7 +65,19 @@ void RC::CalculRC(){
     _c0=(_d2-_A1*_c1)/_A2;
     _r1=(_d1-_A1*_c0-_A0*_c1)/_b0;
     _r0=(_d0-_A0*_c0)/_b0;
+    _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
 }
+
+//                           RC Regulator                                           
+//            __________________________________________________________            Integrator
+//           |   -----------                             -----------    |            -------
+// Setpoint  |  |     1     | PreCommande +   e         | r1*s + r0 |   | Reg_RC    |   1   | *myOutput
+// ------------>|-----------|-------------->O---------->|-----------|-------------->|-------|----------->
+//           |  | r1*s + r0 |               ^ -         | c1*s + c0 |   |           |   s   |
+//           |   -----------                |            -----------    |            -------
+//           |                              |                           |                     *myInput
+//           |                              -------------------------------------------------------------
+//           |__________________________________________________________|             
 
 bool RC::Regule(float dt)
 {
@@ -80,18 +100,14 @@ bool RC::Regule(float dt)
     e[k-1] = e[k];
     Reg_RC[k-1] = Reg_RC[k];
     Reg_1s[k-1] = Reg_1s[k];
-       
-    //    Filtrage du regulateur en sortie
-    if (Reg_1s[k] > 1){
-        *myOutput = 1;
-    }
-    else if (Reg_1s[k] < -1){
-        *myOutput = -1;
-    }
-    else {
-        *myOutput = Reg_1s[k];
-    }
+    
+    *myOutput = Reg_1s[k];
+    
     return true; 
+}
+
+float RC::GetCommande(){
+    return *myOutput;
 }
  
 void RC::SetOutputLimits(double Min, double Max)

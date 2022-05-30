@@ -14,12 +14,16 @@ public:
     Timer RCtimer;
     RC(volatile double* Input, volatile double* Output, volatile double* Setpoint); 
     void SetMode(int Mode);                             //   sets PID to either Manual (0) or Auto (non-0)
-    
-    void ParaMotor(double, double, double, double);     //   paramètres spécifique a chaque moteur
+    //set para
+    void SetParaMotor(double, double, double, double);  //   paramètres spécifique a chaque moteur
 
-    void CalculRC();                                    //   Calcul des différents coéfficients du regulateur RC
+    void SetParaRC(); // fonction qui calcule omega et recalcule RC 
+
+    void CalculRC();    //calcule k a la fin            //   Calcul des différents coéfficients du regulateur RC
 
     bool Regule(float);                                 //   calcul de la régulation de mon moteur
+
+    float GetCommande();                                //   Récupère la valeur du PWM envoyé au moteur
  
     void SetOutputLimits(double, double);               //   clamps the output to a specific range. 0-255 by 
                                                         //   default, but it's likely the user will want 
@@ -53,14 +57,14 @@ public:
     double _a1;
     double _a2;
     double _b0;
-    double _A2 = _a1;
-    double _A1 = _a0;
-    double _A0 = 0;
+    double _A2;
+    double _A1;
+    double _A0;
   
     //variables parmètre pour le régulateur et la précommande
-    double _T=0.16;
-    double _w=3;
-    double _omega=(_w+2*sqrt(_w-1))/_T;
+    double _T;
+    double _w;
+    double _omega;
     // double _d0;
     // double _d1;
     // double _d2;
@@ -69,6 +73,6 @@ public:
     double _c0;
     double _r1;
     double _r0;
-    double _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
+    double _k;
 };
 #endif
