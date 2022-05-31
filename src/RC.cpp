@@ -2,24 +2,33 @@
 #include "mbed.h"
 #include <cstdio>
  
-RC::RC(volatile double* Input, volatile double* Output, volatile double* Setpoint){
+RC::RC(float* Input, float* Output, float* Setpoint){
 
     myOutput = Output;
     myInput = Input;
     mySetpoint = Setpoint;
     inAuto = true;
     RC::SetOutputLimits(-1, 1); //default output limit corresponds to the arduino pwm limits
-                                                
-    SampleTime = .01;                           
-    int k=1;
-    e[k-1] = 0;
-    e[k] = 0;
-    Reg_RC[k-1] = 0;
-    Reg_1s[k-1] = 0;
+
+    SampleTime = .01; 
+    reset();                          
+    
     
     RCtimer.start();
     RCtimer.reset();
     lastTime = RCtimer.read()-SampleTime;
+}
+
+void RC::reset(){
+    int k=1;
+    PreCommande[k] = 0;
+    PreCommande[k-1] = 0;
+    e[k-1] = 0;
+    e[k] = 0;
+    Reg_RC[k] = 0;
+    Reg_RC[k-1] = 0;
+    Reg_1s[k] = 0;
+    Reg_1s[k-1] = 0;
 }
 
 /* SetMode(...)****************************************************************
@@ -37,7 +46,7 @@ void RC::SetMode(int Mode)
     inAuto = newAuto;
 }
 
-void RC::SetParaMotor(double a0, double a1, double a2, double b0){
+void RC::ParaMotor(float a0, float a1, float a2, float b0){
     _a0 = a0;
     _a1 = a1;
     _a2 = a2;
@@ -45,22 +54,20 @@ void RC::SetParaMotor(double a0, double a1, double a2, double b0){
     CalculRC();
 }
 
-void RC::SetParaRC(){
-    _T=0.16;
-    _w=3;
+void RC::setParamRC(float p){
+    _T = p;
     _omega=(_w+2*sqrt(_w-1))/_T;
     CalculRC();
 }
-
 
 void RC::CalculRC(){  
     _A2 = _a1;
     _A1 = _a0;
     _A0 = 0;
-    double _d0=pow(_omega,3);
-    double _d1=3*pow(_omega,2);
-    double _d2=3*_omega;
-    double _d3=1;
+    float _d0=pow(_omega,3);
+    float _d1=3*pow(_omega,2);
+    float _d2=3*_omega;
+    float _d3=1;
     _c1=_d3/_A2;
     _c0=(_d2-_A1*_c1)/_A2;
     _r1=(_d1-_A1*_c0-_A0*_c1)/_b0;
@@ -68,7 +75,7 @@ void RC::CalculRC(){
     _k=(_r0*_b0)/(_c0*_A0+_r0*_b0);
 }
 
-//                           RC Regulator                                           
+//                                  RC Regulator
 //            __________________________________________________________            Integrator
 //           |   -----------                             -----------    |            -------
 // Setpoint  |  |     1     | PreCommande +   e         | r1*s + r0 |   | Reg_RC    |   1   | *myOutput
@@ -77,40 +84,66 @@ void RC::CalculRC(){
 //           |   -----------                |            -----------    |            -------
 //           |                              |                           |                     *myInput
 //           |                              -------------------------------------------------------------
-//           |__________________________________________________________|             
+//           |__________________________________________________________|
 
 bool RC::Regule(float dt)
 {
-   int k=1;
-   
-   SampleTime = dt;
-    //    Declaration des variables   
-    double input = *myInput;
+    int k=1;
+    //  Update of sample time
+    SampleTime = dt;
+    // Update of measurement
+    float input = *myInput;
 
-    //    Calcul intup2
-    PreCommande[k] = (_r0*SampleTime*(*mySetpoint)+_k*_r1*PreCommande[k-1])/(_k*_r1+_k*_r0*SampleTime);
+    // Compute preorder
+    PreCommande[k] = (_r0*SampleTime*(*mySetpoint)+_r1*PreCommande[k-1])/(_r1+_r0*SampleTime);
+    // Compute error
     e[k] = PreCommande[k] - input;
+    // Compute RC regulator output
+    Reg_RC[k] = ((_r1+_r0*SampleTime)*e[k]-_r1*e[k-1]+_c1*Reg_RC[k-1])/(_c1+_c0*SampleTime);    // OK
 
-    //    Calcul Regulateur RC et 1/s
-    Reg_RC[k] = ((_r1+_r0*SampleTime)*e[k]-_r1*e[k-1]+_c1*Reg_RC[k-1])/(_c1+_c0*SampleTime);
+    // Compute result of integrator
     Reg_1s[k] = SampleTime*Reg_RC[k] + Reg_1s[k-1];
 
-    //    Mise à jour des données à t-1  
-    PreCommande[k-1] = PreCommande[k];
-    e[k-1] = e[k];
-    Reg_RC[k-1] = Reg_RC[k];
-    Reg_1s[k-1] = Reg_1s[k];
-    
+    // Update RC output
     *myOutput = Reg_1s[k];
-    
+
+    // Update of state
+    PreCommande[k-1]    = PreCommande[k];
+    e[k-1]              = e[k];
+    Reg_RC[k-1]         = Reg_RC[k];
+    Reg_1s[k-1]         = Reg_1s[k];
+
     return true; 
 }
 
-float RC::GetCommande(){
-    return *myOutput;
+float RC::computeCommande(float dt, float measurement){
+    float result;
+
+    int k=1;
+
+    // Compute preorder
+    PreCommande[k] = (_r0*dt*(*mySetpoint)+_r1*PreCommande[k-1])/(_r1+_r0*dt);
+    // Compute error
+    e[k] = PreCommande[k] - measurement;
+    // Compute RC regulator output
+    Reg_RC[k] = ((_r1+_r0*dt)*e[k]-_r1*e[k-1]+_c1*Reg_RC[k-1])/(_c1+_c0*dt);    // OK
+
+    // Compute result of integrator
+    Reg_1s[k] = dt*Reg_RC[k] + Reg_1s[k-1];
+
+    // Update RC output
+    result = Reg_1s[k];
+
+    // Update of state
+    PreCommande[k-1]    = PreCommande[k];
+    e[k-1]              = e[k];
+    Reg_RC[k-1]         = Reg_RC[k];
+    Reg_1s[k-1]         = Reg_1s[k];
+
+    return result;
 }
  
-void RC::SetOutputLimits(double Min, double Max)
+void RC::SetOutputLimits(float Min, float Max)
 {
    if(Min >= Max) return;
    outMin = Min;
